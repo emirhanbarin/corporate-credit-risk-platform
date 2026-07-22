@@ -1,0 +1,73 @@
+[build-system]
+requires = ["setuptools>=77,<82"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "corporate-credit-risk-platform"
+version = "0.1.0"
+description = "Explainable corporate credit-risk and financial-health analytics."
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+license-files = ["LICENSE"]
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "mypy>=1.19,<2",
+    "pytest>=9,<10",
+    "pytest-cov>=7,<8",
+    "ruff>=0.15,<1",
+]
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["credit_risk_platform*"]
+namespaces = false
+
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+src = ["src", "tests"]
+include = ["src/**/*.py", "tests/**/*.py"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "B", "C4", "PT", "RUF"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["credit_risk_platform"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+files = ["src/credit_risk_platform"]
+warn_unreachable = true
+show_error_codes = true
+show_column_numbers = true
+pretty = true
+
+[tool.pytest.ini_options]
+minversion = "9.0"
+testpaths = ["tests"]
+addopts = ["--strict-markers", "--strict-config", "-ra", "-q"]
+xfail_strict = true
+
+[tool.coverage.run]
+source = ["credit_risk_platform"]
+branch = true
+relative_files = true
+
+[tool.coverage.report]
+show_missing = true
+exclude_also = [
+    "if TYPE_CHECKING:",
+    "if typing.TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+]

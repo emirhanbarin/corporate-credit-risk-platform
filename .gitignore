@@ -7,6 +7,9 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 .coverage
+.coverage.*
+coverage.xml
+coverage.json
 htmlcov/
 
 # Virtual environments
@@ -19,15 +22,27 @@ env/
 .env.*
 !.env.example
 
+# Credentials and private keys
+*.key
+*.pem
+*.p12
+*.pfx
+credentials*.json
+service-account*.json
+
 # macOS
 .DS_Store
 
 # VS Code
 .vscode/
 
+# JetBrains IDEs
+.idea/
+
 # Python build
 build/
 dist/
+.eggs/
 *.egg-info/
 
 # Databases
