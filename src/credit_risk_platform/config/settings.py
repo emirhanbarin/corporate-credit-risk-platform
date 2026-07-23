@@ -10,7 +10,8 @@ from dataclasses import dataclass
 from typing import Self
 from urllib.parse import urlsplit, urlunsplit
 
-_DEFAULT_SEC_BASE_URL = "https://data.sec.gov"
+_DEFAULT_SEC_DATA_BASE_URL = "https://data.sec.gov"
+_DEFAULT_SEC_FILES_BASE_URL = "https://www.sec.gov"
 _DEFAULT_SEC_REQUEST_TIMEOUT_SECONDS = 30.0
 _DEFAULT_SEC_MAX_REQUESTS_PER_SECOND = 5.0
 
@@ -43,7 +44,8 @@ class AppSettings:
 
     sec_user_agent: str
     sec_contact_email: str
-    sec_base_url: str = _DEFAULT_SEC_BASE_URL
+    sec_data_base_url: str = _DEFAULT_SEC_DATA_BASE_URL
+    sec_files_base_url: str = _DEFAULT_SEC_FILES_BASE_URL
     sec_request_timeout_seconds: float = _DEFAULT_SEC_REQUEST_TIMEOUT_SECONDS
     sec_max_requests_per_second: float = _DEFAULT_SEC_MAX_REQUESTS_PER_SECOND
 
@@ -51,11 +53,17 @@ class AppSettings:
         """Normalize and validate settings regardless of construction path."""
         user_agent = self.sec_user_agent.strip()
         contact_email = self.sec_contact_email.strip()
-        base_url = self.sec_base_url.strip()
 
         _validate_user_agent(user_agent)
         _validate_contact_email(contact_email)
-        normalized_base_url = _validate_and_normalize_base_url(base_url)
+        data_base_url = _validate_and_normalize_base_url(
+            self.sec_data_base_url,
+            "SEC_DATA_BASE_URL",
+        )
+        files_base_url = _validate_and_normalize_base_url(
+            self.sec_files_base_url,
+            "SEC_FILES_BASE_URL",
+        )
         _validate_positive_number(
             self.sec_request_timeout_seconds,
             "SEC_REQUEST_TIMEOUT_SECONDS",
@@ -69,7 +77,8 @@ class AppSettings:
 
         object.__setattr__(self, "sec_user_agent", user_agent)
         object.__setattr__(self, "sec_contact_email", contact_email)
-        object.__setattr__(self, "sec_base_url", normalized_base_url)
+        object.__setattr__(self, "sec_data_base_url", data_base_url)
+        object.__setattr__(self, "sec_files_base_url", files_base_url)
 
     @classmethod
     def from_mapping(cls, values: Mapping[str, str]) -> Self:
@@ -77,7 +86,16 @@ class AppSettings:
         return cls(
             sec_user_agent=_required_value(values, "SEC_USER_AGENT"),
             sec_contact_email=_required_value(values, "SEC_CONTACT_EMAIL"),
-            sec_base_url=_optional_value(values, "SEC_BASE_URL", _DEFAULT_SEC_BASE_URL),
+            sec_data_base_url=_optional_value(
+                values,
+                "SEC_DATA_BASE_URL",
+                _DEFAULT_SEC_DATA_BASE_URL,
+            ),
+            sec_files_base_url=_optional_value(
+                values,
+                "SEC_FILES_BASE_URL",
+                _DEFAULT_SEC_FILES_BASE_URL,
+            ),
             sec_request_timeout_seconds=_optional_number(
                 values,
                 "SEC_REQUEST_TIMEOUT_SECONDS",
@@ -105,8 +123,10 @@ def _required_value(values: Mapping[str, str], field: str) -> str:
 
 def _optional_value(values: Mapping[str, str], field: str, default: str) -> str:
     raw_value = values.get(field)
-    if raw_value is None or not raw_value.strip():
+    if raw_value is None:
         return default
+    if not isinstance(raw_value, str):
+        raise ConfigurationError(f"{field} must be a string.")
     return raw_value.strip()
 
 
@@ -165,19 +185,31 @@ def _validate_contact_email(value: str) -> None:
         raise ConfigurationError(f"{field} must not use a placeholder value.")
 
 
-def _validate_and_normalize_base_url(value: str) -> str:
-    field = "SEC_BASE_URL"
+def _validate_and_normalize_base_url(value: str, field: str) -> str:
+    if not isinstance(value, str) or not value:
+        raise ConfigurationError(f"{field} must be a non-empty string.")
     if _contains_control_character(value):
         raise ConfigurationError(f"{field} must not contain control characters.")
     if any(character.isspace() for character in value):
         raise ConfigurationError(f"{field} must not contain whitespace.")
+    if "\\" in value:
+        raise ConfigurationError(f"{field} must not contain backslashes.")
+    if "?" in value:
+        raise ConfigurationError(f"{field} must not include a query string.")
+    if "#" in value:
+        raise ConfigurationError(f"{field} must not include a fragment.")
 
     try:
         parsed = urlsplit(value)
         hostname = parsed.hostname
         port = parsed.port
-    except ValueError as error:
-        raise ConfigurationError(f"{field} must be a valid HTTPS URL.") from error
+    except ValueError:
+        parsed = None
+        hostname = None
+        port = None
+
+    if parsed is None:
+        raise ConfigurationError(f"{field} must be a valid HTTPS URL.")
 
     if parsed.scheme.casefold() != "https":
         raise ConfigurationError(f"{field} must use HTTPS.")
@@ -187,13 +219,10 @@ def _validate_and_normalize_base_url(value: str) -> str:
         raise ConfigurationError(f"{field} must be a valid HTTPS URL.")
     if parsed.username is not None or parsed.password is not None:
         raise ConfigurationError(f"{field} must not include credentials.")
-    if parsed.query:
-        raise ConfigurationError(f"{field} must not include a query string.")
-    if parsed.fragment:
-        raise ConfigurationError(f"{field} must not include a fragment.")
+    if parsed.path not in {"", "/"}:
+        raise ConfigurationError(f"{field} must not include a path.")
 
-    normalized_path = parsed.path.rstrip("/")
-    return urlunsplit(("https", parsed.netloc, normalized_path, "", ""))
+    return urlunsplit(("https", parsed.netloc, "", "", ""))
 
 
 def _validate_positive_number(value: float, field: str, maximum: float) -> None:

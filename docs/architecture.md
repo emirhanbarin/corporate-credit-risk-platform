@@ -186,9 +186,9 @@ These forms use separate paths and metadata. A fixture never overwrites or masqu
 
 ## 10. Configuration boundaries
 
-Configuration supplies operational choices such as SEC base URL,
-provider-identification value, timeout, bounded retry settings, raw-data path,
-fixture path, and logging level when implemented.
+Configuration supplies operational choices such as the separate SEC data and
+hosted-files base authorities, provider-identification value, timeout, bounded
+retry settings, raw-data path, fixture path, and logging level when implemented.
 
 Formulas, mappings, eligibility rules, thresholds, weights, supported scopes, and
 missing-data behavior are versioned methodology or domain decisions, not

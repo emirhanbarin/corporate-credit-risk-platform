@@ -356,7 +356,10 @@ def test_real_request_builder_is_used_without_client_request_changes() -> None:
             "SEC_CONTACT_EMAIL": "orchestration@example.test",
         }
     )
-    builder = SecRequestBuilder(settings)
+    builder = SecRequestBuilder(
+        settings,
+        base_url=settings.sec_data_base_url,
+    )
     transport = _FakeTransport([_response()])
     clock = _MutableClock()
     sleeper = _Sleeper(clock)
