@@ -28,7 +28,7 @@ def validate_sec_response(
 
     sanitized_request_url = _sanitize_request_url(request_url)
     status_code = response.status_code
-    if 200 <= status_code <= 299:
+    if _is_success_status(status_code):
         return response
     if status_code == 429:
         raise SecRateLimitError(
@@ -49,3 +49,7 @@ def validate_sec_response(
         status_code=status_code,
         request_url=sanitized_request_url,
     )
+
+
+def _is_success_status(status_code: int) -> bool:
+    return 200 <= status_code <= 299

@@ -1,5 +1,6 @@
 """Public SEC provider contracts."""
 
+from credit_risk_platform.providers.sec.client import SecClient
 from credit_risk_platform.providers.sec.errors import (
     SecNotFoundError,
     SecProviderError,
@@ -15,6 +16,7 @@ from credit_risk_platform.providers.sec.request_builder import SecRequestBuilder
 from credit_risk_platform.providers.sec.response_mapper import validate_sec_response
 
 __all__ = [
+    "SecClient",
     "SecNotFoundError",
     "SecProviderError",
     "SecRateLimitError",
