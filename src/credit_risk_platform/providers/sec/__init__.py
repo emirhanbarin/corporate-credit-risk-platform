@@ -14,8 +14,17 @@ from credit_risk_platform.providers.sec.errors import (
 from credit_risk_platform.providers.sec.models import SecRequest
 from credit_risk_platform.providers.sec.request_builder import SecRequestBuilder
 from credit_risk_platform.providers.sec.response_mapper import validate_sec_response
+from credit_risk_platform.providers.sec.ticker_mapping import (
+    SecCik,
+    SecTickerCatalog,
+    SecTickerMappingError,
+    SecTickerNotFoundError,
+    SecTickerRecord,
+    parse_sec_ticker_mapping,
+)
 
 __all__ = [
+    "SecCik",
     "SecClient",
     "SecNotFoundError",
     "SecProviderError",
@@ -25,7 +34,12 @@ __all__ = [
     "SecRequestError",
     "SecResponseError",
     "SecServerError",
+    "SecTickerCatalog",
+    "SecTickerMappingError",
+    "SecTickerNotFoundError",
+    "SecTickerRecord",
     "SecTimeoutError",
     "SecTransportError",
+    "parse_sec_ticker_mapping",
     "validate_sec_response",
 ]
