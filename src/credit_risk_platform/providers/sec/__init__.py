@@ -1,6 +1,9 @@
 """Public SEC provider contracts."""
 
 from credit_risk_platform.providers.sec.client import SecClient
+from credit_risk_platform.providers.sec.company_facts_adapter import (
+    SecCompanyFactsAdapter,
+)
 from credit_risk_platform.providers.sec.errors import (
     SecNotFoundError,
     SecProviderError,
@@ -36,6 +39,7 @@ from credit_risk_platform.providers.sec.ticker_mapping_adapter import (
 __all__ = [
     "SecCik",
     "SecClient",
+    "SecCompanyFactsAdapter",
     "SecNotFoundError",
     "SecProviderError",
     "SecRateLimitError",
