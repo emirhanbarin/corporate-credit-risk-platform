@@ -22,6 +22,9 @@ from credit_risk_platform.providers.sec.ticker_mapping import (
     SecTickerRecord,
     parse_sec_ticker_mapping,
 )
+from credit_risk_platform.providers.sec.ticker_mapping_adapter import (
+    SecTickerMappingAdapter,
+)
 
 __all__ = [
     "SecCik",
@@ -35,6 +38,7 @@ __all__ = [
     "SecResponseError",
     "SecServerError",
     "SecTickerCatalog",
+    "SecTickerMappingAdapter",
     "SecTickerMappingError",
     "SecTickerNotFoundError",
     "SecTickerRecord",
