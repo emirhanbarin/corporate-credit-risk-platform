@@ -5,6 +5,11 @@ from credit_risk_platform.providers.http import (
     HttpResponse,
     HttpTransport,
 )
+from credit_risk_platform.providers.rate_limit import (
+    RateLimitDecision,
+    RateLimitPolicy,
+    RateLimitState,
+)
 from credit_risk_platform.providers.retry import (
     RetryDecision,
     RetryDecisionReason,
@@ -25,6 +30,9 @@ __all__ = [
     "HttpTimeoutError",
     "HttpTransport",
     "HttpTransportError",
+    "RateLimitDecision",
+    "RateLimitPolicy",
+    "RateLimitState",
     "RetryDecision",
     "RetryDecisionReason",
     "RetryOutcome",
