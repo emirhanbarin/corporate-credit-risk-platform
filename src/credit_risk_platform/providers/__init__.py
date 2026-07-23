@@ -5,5 +5,19 @@ from credit_risk_platform.providers.http import (
     HttpResponse,
     HttpTransport,
 )
+from credit_risk_platform.providers.urllib_transport import (
+    HttpResponseTooLargeError,
+    HttpTimeoutError,
+    HttpTransportError,
+    UrllibHttpTransport,
+)
 
-__all__ = ["HttpRequest", "HttpResponse", "HttpTransport"]
+__all__ = [
+    "HttpRequest",
+    "HttpResponse",
+    "HttpResponseTooLargeError",
+    "HttpTimeoutError",
+    "HttpTransport",
+    "HttpTransportError",
+    "UrllibHttpTransport",
+]
