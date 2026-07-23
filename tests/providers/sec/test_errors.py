@@ -37,12 +37,12 @@ def test_safe_default_messages() -> None:
     assert str(SecServerError(status_code=500)) == "SEC returned a server error."
 
 
-@pytest.mark.parametrize("status_code", [400, 599])
+@pytest.mark.parametrize("status_code", [100, 199, 300, 400, 599])
 def test_response_status_boundaries(status_code: int) -> None:
     assert SecResponseError(status_code=status_code).status_code == status_code
 
 
-@pytest.mark.parametrize("status_code", [399, 600, True])
+@pytest.mark.parametrize("status_code", [99, 200, 299, 600, True])
 def test_invalid_response_status_is_rejected(status_code: int) -> None:
     with pytest.raises(ValueError, match="status_code"):
         SecResponseError(status_code=status_code)

@@ -129,8 +129,13 @@ class SecServerError(SecResponseError):
 
 
 def _validate_error_status(value: int) -> int:
-    if isinstance(value, bool) or not isinstance(value, int) or not 400 <= value <= 599:
-        raise ValueError("status_code must be an HTTP error status from 400 to 599.")
+    if (
+        isinstance(value, bool)
+        or not isinstance(value, int)
+        or not 100 <= value <= 599
+        or 200 <= value <= 299
+    ):
+        raise ValueError("status_code must be a non-success HTTP status.")
     return value
 
 

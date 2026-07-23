@@ -12,6 +12,7 @@ from credit_risk_platform.providers.sec.errors import (
 )
 from credit_risk_platform.providers.sec.models import SecRequest
 from credit_risk_platform.providers.sec.request_builder import SecRequestBuilder
+from credit_risk_platform.providers.sec.response_mapper import validate_sec_response
 
 __all__ = [
     "SecNotFoundError",
@@ -24,4 +25,5 @@ __all__ = [
     "SecServerError",
     "SecTimeoutError",
     "SecTransportError",
+    "validate_sec_response",
 ]
