@@ -29,20 +29,30 @@ This document does not define Python classes or types, database tables or column
 - **Metric identifier:** A stable lowercase `snake_case` name for one approved analytical measure, such as `current_ratio`.
 - **Status identifier:** A lowercase `snake_case` name for one controlled outcome meaning, such as `not_applicable`.
 - **Reason code:** A stable lowercase `snake_case` identifier for a specific exceptional or limiting reason.
-- **Version identifier:** A stable reference to one approved semantic definition set. Its exact format is deferred.
+- **Version identifier:** A stable reference to one approved semantic definition
+  set. Global formats remain deferred; the Microsoft annual Company Facts policy
+  uses the exact identifier `microsoft_annual_company_facts_v1`.
 
 Names must be unambiguous in context. Labels must not replace stable identifiers, and provider tags must not become normalized concept identifiers by convenience.
 
 ## 4. Company identity terms
 
 - **Company:** The legal reporting entity whose financial information is analyzed, within an approved accounting scope.
-- **Stable company identifier:** The platform-controlled identity that must continue to identify the same analytical entity over time. Its exact format is deferred.
+- **Stable company identifier:** The platform-controlled identity that must
+  continue to identify the same analytical entity over time. The narrow Phase 1
+  Microsoft identifier is `microsoft_corporation`; general formats remain
+  deferred.
 - **Ticker symbol:** An exchange-facing trading symbol associated with a security or issuer. It may change or be reused and must not be the permanent primary company identifier.
 - **Legal company name:** The formal issuer name associated with the company for the relevant time and source context; it is descriptive, not necessarily immutable.
 - **Provider company identifier:** A provider-assigned identifier for a company, meaningful only with its provider namespace.
 - **SEC CIK:** The Central Index Key assigned by the SEC to a filer. It is an SEC provider identifier and must be associated with, not substituted for, the stable company identifier.
 - **Industry:** A narrower business-activity classification assigned under a named classification system and version. No classification taxonomy is approved here.
 - **Sector:** A broader business-activity grouping assigned under a named classification system and version. It must not be inferred from an undocumented label.
+
+For the Phase 1 selection boundary, the approved analytical company is Microsoft
+Corporation, its stable company identifier is `microsoft_corporation`, and its
+exact canonical SEC CIK is `0000789019`. `MSFT` and entity-name text remain
+descriptive. This boundary does not create a general registry.
 
 ## 5. Provider and source terms
 
@@ -62,16 +72,25 @@ Names must be unambiguous in context. Labels must not replace stable identifiers
 
 - **Filing:** A submission made available by a reporting entity through the SEC, with its own form, accession, and filing context.
 - **Filing form:** The provider designation for the filing type, such as an annual or quarterly filing form.
-- **Annual filing:** A filing covering the issuer's annual reporting obligations; Phase 1 eligibility will be limited by an approved 10-K policy before implementation.
+- **Annual filing:** A filing covering the issuer's annual reporting obligations.
+  Under `microsoft_annual_company_facts_v1`, exact form `10-K` is the ordinary
+  eligible form; `10-K/A` is only conditional amendment evidence.
 - **Quarterly filing:** A filing covering an interim quarterly reporting context. It is outside Phase 1 analysis.
 - **Accession number:** The SEC-assigned identifier for a specific filing submission, retained when available.
 - **Filing date:** The date the filing became filed or available under approved source semantics.
 - **Reporting date:** The date the financial information represents, expressed by a period end or instant date as applicable; it is not the filing date.
 - **Fiscal year:** The issuer-defined annual accounting period, which may differ from the calendar year.
 - **Fiscal period:** The provider or filing designation for the reporting context, interpreted only with fiscal year and period dates.
-- **Amendment:** A later filing that modifies or supplements an earlier filing; it must not silently overwrite prior evidence.
-- **Restatement:** A later reporting of revised facts for an earlier period; both earlier and revised contexts must remain traceable.
-- **Analysis cutoff:** The latest filing date or observation time permitted for an analysis. Evidence first available after it must be excluded.
+- **Amendment:** A later `/A` filing that modifies or supplements identified
+  items in an earlier filing. It does not prove that every original fact was
+  replaced and must not silently overwrite prior evidence.
+- **Restatement:** Revised prior-period financial information presented through
+  reissuance, later comparative reporting, retrospective accounting change, or
+  error correction. A later comparative is not automatically a restatement;
+  earlier and later facts and filing context must remain traceable.
+- **Analysis cutoff:** The latest filing date permitted for an analysis. For
+  `microsoft_annual_company_facts_v1`, it is date-only and inclusive:
+  `observation.filed <= analysis_cutoff`.
 
 Filing date, reporting date, retrieval timestamp, and analysis cutoff describe different events and must not be substituted for one another.
 
@@ -81,6 +100,12 @@ Filing date, reporting date, retrieval timestamp, and analysis cutoff describe d
 - **Period type:** The controlled distinction between a duration and an instant context.
 - **Duration fact:** A fact measuring activity over a period bounded by a start and end date.
 - **Instant fact:** A fact measuring a position at one date.
+- **Annual duration fact:** A duration fact whose exact issuer fiscal-year start
+  and end, fiscal-year focus, annual fiscal-period focus, filing form, unit, and
+  cutoff satisfy the approved annual policy.
+- **Annual point-in-time fact:** An instant fact at the exact issuer fiscal-year
+  end whose absent start, fiscal-year focus, annual fiscal-period focus, filing
+  form, unit, and cutoff satisfy the approved annual policy.
 - **Period start:** The inclusive or source-defined beginning date of a duration fact, interpreted under approved source semantics.
 - **Period end:** The ending date of a duration fact; it does not by itself prove annual comparability.
 - **Instant date:** The date represented by an instant fact, normally the applicable reporting boundary.
@@ -107,7 +132,10 @@ Normalization must not change economic meaning, accounting scope, concept identi
 
 ## 9. Phase 1 normalized financial concepts
 
-Only the following normalized concepts are approved for Phase 1. Exact SEC XBRL tag mappings and formulas are not defined here.
+Only the following normalized concepts are approved for Phase 1. Exact SEC XBRL
+tag mappings and priority are owned by
+[`financial-methodology.md`, section 16.8](financial-methodology.md#168-ordered-microsoft-source-tag-mappings);
+formulas are not defined here.
 
 | Canonical identifier | Label | Business definition | Period type | Expected economic meaning | Important limitations |
 |---|---|---|---|---|---|
@@ -120,13 +148,41 @@ Only the following normalized concepts are approved for Phase 1. Exact SEC XBRL 
 ## 10. Normalization and selection terms
 
 - **Normalized financial fact:** A provider-independent reported fact mapped to one controlled concept with period, unit, currency, quality, selection, and provenance context.
-- **Candidate fact:** A validated provider fact considered by an approved selection policy for a requested concept and context.
-- **Selected fact:** The unique eligible candidate chosen under the approved policy; response order alone must never select it.
+- **Normalized concept:** One provider-independent approved financial meaning,
+  identified by its normalized concept identifier and not by a provider label or
+  source tag.
+- **Candidate occurrence:** One preserved provider observation together with its
+  raw-artifact reference, before exact duplicate occurrences are grouped.
+- **Candidate fact:** One evidence identity under an approved source tag that is
+  evaluated for a specific request; it contains every exact duplicate candidate
+  occurrence sharing that identity.
+- **Candidate rank:** The policy-defined source-tag tier and same-tag eligibility
+  class used after candidate evaluation. It never includes provider response
+  position, retrieval order, `frame`, or incidental JSON order.
+- **Selected fact:** One economic fact resolved from one eligible candidate or one
+  approved group of equivalent candidates. Response order alone must never select
+  it.
+- **Selected source tag:** The exact taxonomy and concept identifier of the
+  candidate or resolved candidate group in a Selected outcome.
 - **Rejected candidate:** A considered fact not selected for a documented eligibility or priority reason.
 - **Selection rationale:** The deterministic explanation of candidates, rules, rejections, and final outcome.
-- **Selection status:** The controlled outcome of fact selection, distinct from general data quality.
-- **Ambiguity:** A state in which more than one candidate remains plausible and policy cannot select uniquely, whether or not values disagree.
-- **Conflict:** A state in which eligible evidence disagrees materially and approved policy cannot resolve it.
+- **Selection status:** Exactly one controlled outcome of fact selection:
+  `selected`, `unavailable`, `ambiguous`, `conflicting`, `unsupported`, or
+  `invalid`. It is distinct from general data quality.
+- **Selection reason code:** A stable lowercase `snake_case` identifier recording
+  why a candidate was accepted, rejected, left unresolved, or selected and why
+  the outcome has its status.
+- **Equivalent duplicate:** Repeated or value-equivalent evidence that the
+  approved policy can collapse to one controlling economic fact while retaining
+  every occurrence, filing identity, and raw-artifact lineage.
+- **Conflicting fact:** An ordinary eligible fact whose numeric value differs
+  from another fact at the same candidate rank and whose disagreement has no
+  approved resolution.
+- **Ambiguity:** A selection state in which same-value, equally ranked candidates
+  remain plausible but cannot be proven equivalent or reduced to one controlling
+  candidate.
+- **Conflict:** A selection state in which equally ranked ordinary eligible facts
+  have unequal values and approved policy cannot resolve them.
 - **Unsupported source fact:** A source fact requiring an unapproved concept, scope, form, period, unit, currency, or treatment.
 - **Normalized concept identifier:** The stable provider-independent identifier assigned to one approved financial concept.
 
@@ -137,7 +193,10 @@ Only the following normalized concepts are approved for Phase 1. Exact SEC XBRL 
 - **Metric input set:** The evaluated collection of normalized facts, compatibility outcomes, completeness, and provenance supplied to one metric.
 - **Metric result:** The value-or-status outcome of applying one methodology version to one metric input set.
 - **Metric value:** The numeric result when required inputs and methodology permit calculation; exceptional outcomes must not fabricate one.
-- **Methodology version:** The stable reference to the exact approved selection and calculation rules used.
+- **Methodology version:** The stable repository-controlled identifier for the
+  exact approved selection or calculation rules used; the initial Microsoft
+  annual Company Facts selection identifier is
+  `microsoft_annual_company_facts_v1`.
 - **Calculation timestamp:** The time the platform produced a metric result; it is distinct from source and filing times.
 - **Interpretation:** A bounded explanation of what a supported result may indicate and what it does not establish.
 - **Reason code:** A stable machine-readable identifier explaining an exceptional, unavailable, or limited outcome.
@@ -207,6 +266,7 @@ Expected lineage must support traversal in both directions:
 Metric result
   -> metric input set
   -> normalized financial fact
+  -> fact-selection outcome
   -> validated provider record
   -> locally preserved raw response or documented fixture evidence
   -> original provider source
@@ -231,19 +291,38 @@ Reason codes must be stable, machine-readable, human-explainable, documented, an
 
 A reason code must not replace detailed provenance, validation evidence, selection rationale, or interpretation. Display wording may elaborate on a code but must not redefine it.
 
-Illustrative categories include:
+For `microsoft_annual_company_facts_v1`, the exact selection vocabulary is:
 
-- `missing_input`
-- `period_mismatch`
-- `currency_mismatch`
-- `unit_mismatch`
-- `ambiguous_fact`
-- `conflicting_fact`
-- `unsupported_source`
-- `zero_denominator`
-- `invalid_value`
+```text
+company_mismatch
+invalid_request_context
+invalid_candidate_evidence
+concept_unsupported
+methodology_version_unsupported
+no_approved_tag_present
+unsupported_unit
+ineligible_filing_form
+filed_after_cutoff
+fiscal_year_mismatch
+fiscal_period_mismatch
+duration_mismatch
+instant_date_mismatch
+amendment_unresolved
+restatement_unresolved
+no_eligible_candidate
+unique_eligible_candidate
+equivalent_duplicates
+multiple_equal_candidates
+conflicting_values
+lower_priority_tag
+```
 
-These examples do not finalize the complete vocabulary, precedence, combinations, or serialized representation.
+The exact meanings are owned by
+[`financial-methodology.md`, section 16.11](financial-methodology.md#1611-selection-statuses-and-reason-codes),
+and their logical contract is in
+[`data-contracts.md`, section 9](data-contracts.md#9-phase-1-annual-fact-selection-contracts).
+Reason vocabularies for later metric calculation and other policies remain
+unapproved.
 
 ## 18. Versioning terms
 
@@ -255,15 +334,20 @@ These examples do not finalize the complete vocabulary, precedence, combinations
 - **Deprecated term:** A supported term scheduled for replacement or removal; it must not be repurposed during deprecation.
 - **Migration note:** Documentation of affected meanings, consumers, replacement, compatibility treatment, and transition expectations.
 
-Exact version formats, storage, and negotiation mechanics remain deferred.
+Exact general version formats, storage, and negotiation mechanics remain
+deferred. This does not make the approved
+`microsoft_annual_company_facts_v1` identifier mutable.
 
 ## 19. Phase 1 boundaries
 
 Current Phase 1 dictionary scope is limited to:
 
-- Microsoft Corporation under an approved stable company identity;
-- annual SEC Company Facts and eligible annual 10-K context;
+- Microsoft Corporation under stable identifier `microsoft_corporation` and
+  canonical SEC CIK `0000789019`;
+- annual SEC Company Facts and ordinary `10-K` context, with `10-K/A` considered
+  only under the conservative amendment rule;
 - Revenue, Current Assets, Current Liabilities, Operating Income, and Interest Expense;
+- methodology version `microsoft_annual_company_facts_v1`;
 - Revenue Growth, Current Ratio, and Interest Coverage;
 - sanitized committed fixtures for deterministic offline processing by default; and
 - optional isolated live SEC retrieval with local raw-response preservation.
@@ -274,13 +358,16 @@ Cross-company concept generalization, quarterly and trailing-twelve-month analys
 
 The following remain unresolved and must not be invented implicitly:
 
-- exact stable company, provenance, and other identifier formats;
-- exact reason-code vocabulary, precedence, and combinations;
-- exact SEC source-tag mappings and priorities;
+- stable company-identifier formats and registry mechanics outside the approved
+  `microsoft_corporation` identifier, plus provenance and other identifier
+  formats;
+- reason-code vocabulary, precedence, and combinations outside the Phase 1
+  Microsoft selection policy;
 - exact sign conventions for provider-specific facts;
 - exact serialized field names and field encodings;
 - exact enum representations;
-- exact contract, methodology, and dictionary version formats; and
+- exact contract and dictionary version formats and methodology-version formats
+  outside the approved Microsoft policy; and
 - future cross-company concept extensions and classification taxonomies.
 
 Each decision requires approval by its owning methodology, contract, dictionary, architecture, roadmap, or execution-plan process before dependent implementation.

@@ -40,6 +40,7 @@ Original provider payload
   -> Locally preserved raw response
   -> Sanitized committed fixture
   -> Validated provider record
+  -> Fact-selection outcome
   -> Normalized financial fact
   -> Metric input set
   -> Metric result
@@ -139,29 +140,169 @@ It must include or reference:
 
 Normalization may standardize identifiers and scale, but must not change meaning, substitute a concept, change scope, translate currency, shift dates, or construct a total without approved methodology.
 
-## 9. Fact-selection outcome
+## 9. Phase 1 annual fact-selection contracts
 
-Fact selection must produce a structured outcome rather than an unexplained value
-or absence. The selection status vocabulary must support at least:
+These logical contracts carry the Microsoft policy defined in
+[`financial-methodology.md`, section 16](financial-methodology.md#16-phase-1-microsoft-annual-fact-selection-policy).
+They establish semantics and invariants only. They do not define Python names,
+serialized field names, persistence, APIs, or an implemented selector.
 
-- **Selected:** one eligible candidate was chosen under the approved policy.
-- **Unavailable:** no usable candidate was available for the requested context.
-- **Ambiguous:** multiple candidates remain and the policy cannot choose uniquely.
-- **Conflicting:** eligible candidates disagree in a material, unresolved way.
-- **Unsupported:** candidates require an unapproved concept, scope, period, unit, currency, form, or treatment.
-- **Invalid:** candidate evidence fails an applicable validity rule.
+### 9.1 Annual fact-selection request
 
-Every outcome must preserve or reference:
+One request addresses one normalized concept and one Microsoft fiscal year. It
+must include or reference:
 
-- candidate facts considered;
-- deterministic selection rationale;
-- rejected alternatives and rejection reasons;
-- analysis cutoff date; and
-- amendment and restatement treatment.
+- stable Microsoft analytical identifier `microsoft_corporation` and canonical
+  SEC CIK `0000789019`;
+- one normalized concept identifier: `revenue`, `current_assets`,
+  `current_liabilities`, `operating_income`, or `interest_expense`;
+- target fiscal year;
+- exact target fiscal-year start for Revenue, Operating Income, and Interest
+  Expense, and no applicable start for Current Assets or Current Liabilities;
+- exact target fiscal-year end;
+- a date-only analysis cutoff; and
+- methodology version `microsoft_annual_company_facts_v1`.
 
-Incidental response order must not resolve selection. The exact Phase 1 algorithm and
-source-tag priority belong to [`financial-methodology.md`](financial-methodology.md) under
-the sequencing authority of [`../ROADMAP.md`](../ROADMAP.md); they are not defined here.
+The request must be self-consistent with the concept's duration or instant period
+type. The canonical CIK is the exact provider-identity boundary, while
+`microsoft_corporation` preserves the platform analytical identity. This narrow
+identifier does not define a general company-identifier format or registry.
+
+### 9.2 Candidate evaluation
+
+One candidate occurrence represents one preserved SEC Company Facts observation
+and its originating raw artifact. Exact duplicate occurrences form one evaluated
+candidate-fact identity without losing occurrence-level evidence. An evaluated
+candidate must include or reference:
+
+- its request;
+- taxonomy and exact provider concept identifier;
+- every underlying occurrence and raw observation fields `val`, `accn`, `form`,
+  `filed`, `end`, and optional `fy`, `fp`, `frame`, and `start`, preserving field
+  absence;
+- the exact provider unit key;
+- one candidate disposition: `eligible`, `rejected`, `unresolved`, or `invalid`;
+- every applicable stable reason code and one primary reason when not eligible;
+- source-tag priority and same-tag ranking tier;
+- every eligibility-check result, including checks that did not determine the
+  primary rejection;
+- amendment, later-period, and restatement classification; and
+- the originating `SecRawArtifact` provenance reference.
+
+`eligible` means the candidate passes every ordinary rule; eligible candidates
+may still participate in a final Ambiguous or Conflicting outcome. `rejected`
+means a documented filter, lower tag, or value-agreeing non-controlling amendment
+deterministically excludes the candidate without making it uninterpretable.
+`unresolved` is reserved for amendment or restatement evidence whose controlling
+treatment cannot be established. `invalid` means the target-relevant evidence
+cannot be interpreted consistently.
+
+Candidate rank is not response position. Its only concept preference is the
+integer source-tag priority defined by the methodology, applied after all
+observations in that tag tier are resolved. Within a tag tier, eligibility,
+equivalence, amendment/restatement treatment, value agreement, and uniqueness
+determine disposition; filing recency, accession sorting, retrieval time,
+`frame`, and JSON order are not rank fields.
+
+The exact Phase 1 selection reason-code set, used across request validation,
+candidate evaluation, and the final outcome, is:
+
+```text
+company_mismatch
+invalid_request_context
+invalid_candidate_evidence
+concept_unsupported
+methodology_version_unsupported
+no_approved_tag_present
+unsupported_unit
+ineligible_filing_form
+filed_after_cutoff
+fiscal_year_mismatch
+fiscal_period_mismatch
+duration_mismatch
+instant_date_mismatch
+amendment_unresolved
+restatement_unresolved
+no_eligible_candidate
+unique_eligible_candidate
+equivalent_duplicates
+multiple_equal_candidates
+conflicting_values
+lower_priority_tag
+```
+
+The owning meanings and outcome effects are defined in
+[`financial-methodology.md`, section 16.11](financial-methodology.md#1611-selection-statuses-and-reason-codes).
+Display wording must not redefine these identifiers.
+
+### 9.3 Selection outcome
+
+Fact selection produces one structured outcome rather than an unexplained value
+or absence. Its controlled status is exactly one of:
+
+- **Selected** (`selected`): one eligible candidate or one resolved group of
+  equivalent candidates represents exactly one selected economic fact.
+- **Unavailable** (`unavailable`): supported filtering leaves no eligible
+  candidate and no blocking unresolved or invalid evidence.
+- **Ambiguous** (`ambiguous`): equally ranked, same-value candidates cannot be
+  proven equivalent or reduced to one controlling candidate.
+- **Conflicting** (`conflicting`): equally ranked ordinary eligible candidates
+  have unequal values.
+- **Unsupported** (`unsupported`): the requested concept, version, unit, or
+  required treatment is outside the policy, including unresolved amendment or
+  restatement treatment.
+- **Invalid** (`invalid`): the request, company evidence, or target-relevant
+  candidate violates a validity invariant.
+
+Every outcome must include or reference:
+
+- the complete request;
+- controlled status, primary reason code, and all material contributing reasons;
+- the selected candidate or resolved group of equivalent candidates, and the
+  selected source tag, only when Selected;
+- all evaluated candidate facts and all candidate occurrences, including exact
+  duplicates and observations rejected by cutoff;
+- all rejected alternatives and their eligibility results and reasons;
+- the unresolved candidate set when applicable;
+- deterministic selection rationale and source-tag priority treatment;
+- equivalent-evidence lineage when applicable;
+- amendment and restatement treatment; and
+- provenance through every candidate to the originating raw artifact.
+
+### 9.4 Selection invariants
+
+- Selected contains exactly one selected economic fact represented by one
+  eligible candidate or one resolved group of equivalent candidates. Every group
+  member must be eligible, be in the evaluated set, and use the selected source
+  tag.
+- Equivalent duplicates may support Selected only when they collapse under the
+  methodology. Exact duplicates form one candidate-fact identity; other approved
+  equivalents form one selected candidate group. Every occurrence, filing
+  identity, eligibility decision, and raw-artifact reference is retained.
+- A value-agreeing `10-K/A` is not a selected-group member. It remains a Rejected
+  candidate associated as supporting amendment evidence with reason
+  `equivalent_duplicates`; the ordinary `10-K` candidate controls.
+- A non-Selected outcome has no selected candidate or candidate group, selected
+  source tag, or fabricated selected value.
+- Every outcome retains all evaluated evidence, including rejected alternatives
+  and unresolved candidates. A selected value must not sever rejected or
+  contradictory lineage.
+- The inclusive rule
+  `observation.filed <= analysis_cutoff` is applied before candidate selection.
+  Retrieval time is never substituted for filing date.
+- Provider response order, JSON position, retrieval order, and `frame` are never
+  part of ranking.
+- A lower-priority tag is considered only after the higher tier is resolved.
+  Invalid, unsupported, ambiguous, conflicting, amendment-unresolved, or
+  restatement-unresolved target evidence at a higher tier blocks fallback.
+- Unresolved conflicts remain explicit. They are never resolved by latest filing,
+  latest retrieval, accession order, averaging, extrema, or value size.
+- Original and amended or later-period accessions, forms, filed dates, values,
+  and treatment remain in provenance.
+- Candidate and final primary reason codes follow the deterministic precedence in
+  the methodology; all other applicable reasons remain contributing reasons.
+- Selection performs no currency conversion, reconstruction, metric calculation,
+  persistence, or presentation reinterpretation.
 
 ## 10. Metric input set
 
@@ -215,10 +356,11 @@ The controlled data-quality vocabulary is:
 - **Conflicting:** eligible evidence disagrees and the approved policy cannot resolve it.
 - **Not applicable:** the concept or metric does not apply under approved methodology.
 
-Fact-level status describes one source or normalized fact. Selection-level status describes
-candidate evaluation and may include `selected`, `unavailable`, or `ambiguous`.
-Metric-level status describes calculation and input-set fitness. These levels must not be
-collapsed merely because labels overlap.
+Fact-level status describes one source or normalized fact. Selection-level status
+uses exactly `selected`, `unavailable`, `ambiguous`, `conflicting`, `unsupported`,
+or `invalid` under section 9. Metric-level status describes calculation and
+input-set fitness. These levels must not be collapsed merely because labels
+overlap.
 
 ## 13. Provenance contract
 
@@ -228,6 +370,7 @@ Minimum lineage must permit traversal in both directions through:
 Metric result
   -> metric input set
   -> normalized financial fact
+  -> fact-selection outcome
   -> validated provider record
   -> locally preserved raw response or documented fixture evidence
   -> original provider source
@@ -250,7 +393,10 @@ original. Live provenance must keep source, retrieval, and preserved response au
 - **Reason codes** must be stable semantic identifiers; display text must not change meaning.
 - **Methodology versions** must identify the exact approved selection and calculation rules.
 
-Exact identifier formats and registries remain deferred pending Phase 1 approval.
+Global identifier formats and registry mechanics remain deferred. The Phase 1
+selection request nevertheless must use stable analytical identifier
+`microsoft_corporation` and exact canonical SEC CIK `0000789019`; that narrow
+requirement does not establish a reusable registry.
 
 ## 15. Time semantics
 
@@ -258,12 +404,15 @@ Exact identifier formats and registries remain deferred pending Phase 1 approval
 - **Filing date:** when the filing became filed or available under approved source semantics.
 - **Reporting-period start/end:** the duration covered by a flow fact.
 - **Instant date:** the date represented by a point-in-time fact.
-- **Analysis cutoff:** the latest information time permitted for an analysis.
+- **Analysis cutoff:** the latest filing date permitted for an analysis.
 - **Publication or calculation timestamp:** when the platform produced or published a result.
 
-These times are not interchangeable. Retrieval does not redefine filing or reporting dates;
-calculation does not alter the cutoff; and later retrieval must not introduce filings
-unavailable at a historical cutoff. Timezone or date-only semantics must be explicit.
+These times are not interchangeable. Retrieval does not redefine filing or
+reporting dates; calculation does not alter the cutoff; and later retrieval must
+not introduce filings unavailable at a historical cutoff. For
+`microsoft_annual_company_facts_v1`, the cutoff is date-only and inclusive:
+`observation.filed <= analysis_cutoff`. Other future policies must define their
+own date or timestamp semantics explicitly.
 
 ## 16. Currency and unit semantics
 
@@ -277,6 +426,10 @@ reversible or exactly explainable.
 
 Phase 1 does not support currency conversion. No stage may translate currency, assume one,
 or equate different currencies silently. Unapproved conversion is unsupported or invalid.
+
+For `microsoft_annual_company_facts_v1`, the only eligible provider unit key is
+exact, case-sensitive `USD` for all five concepts. Unit aliases and other
+dimensions are not normalized into eligibility.
 
 ## 17. Contract evolution
 
@@ -314,9 +467,12 @@ success satisfies the contract; it does not prove accounting truth or metric eli
 
 Phase 1 contract scope is limited to:
 
-- Microsoft Corporation under one approved stable company identity;
-- annual SEC Company Facts and eligible annual 10-K context;
+- Microsoft Corporation under stable identifier `microsoft_corporation` and
+  canonical SEC CIK `0000789019`;
+- annual SEC Company Facts and ordinary `10-K` context, with `10-K/A` considered
+  only under the documented conservative amendment rule;
 - five concepts: Revenue, Current Assets, Current Liabilities, Operating Income, and Interest Expense;
+- methodology version `microsoft_annual_company_facts_v1`;
 - three metric results: Revenue Growth, Current Ratio, and Interest Coverage;
 - reviewed sanitized fixtures for deterministic offline processing by default; and
 - optional, isolated live SEC retrieval with local raw-response preservation.
@@ -333,10 +489,11 @@ These are contract constraints, not claims of implementation. `ROADMAP.md` gover
 The following remain unresolved and require approval by the document owner:
 
 - exact serialized formats and field encodings;
-- exact reason-code vocabulary and result-status mapping;
-- exact SEC source-tag mappings and priority order;
-- exact candidate and selection-metadata structure;
-- stable company-identifier format and registry mechanics;
+- reason-code vocabularies and result-status mappings outside the Phase 1
+  Microsoft selection contract;
+- exact serialized representations of candidate and selection metadata;
+- stable company-identifier formats and registry mechanics outside the approved
+  `microsoft_corporation` identifier;
 - persistence schemas, retention, and migrations;
 - API serialization and compatibility behavior;
 - contract-version storage and negotiation mechanics;
