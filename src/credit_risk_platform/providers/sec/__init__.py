@@ -4,6 +4,16 @@ from credit_risk_platform.providers.sec.client import SecClient
 from credit_risk_platform.providers.sec.company_facts_adapter import (
     SecCompanyFactsAdapter,
 )
+from credit_risk_platform.providers.sec.company_facts_models import (
+    SecCompanyFactConcept,
+    SecCompanyFactObservation,
+    SecCompanyFacts,
+)
+from credit_risk_platform.providers.sec.company_facts_parser import (
+    SecCompanyFactsParseError,
+    SecCompanyFactsParseReason,
+    parse_company_facts,
+)
 from credit_risk_platform.providers.sec.errors import (
     SecNotFoundError,
     SecProviderError,
@@ -39,7 +49,12 @@ from credit_risk_platform.providers.sec.ticker_mapping_adapter import (
 __all__ = [
     "SecCik",
     "SecClient",
+    "SecCompanyFactConcept",
+    "SecCompanyFactObservation",
+    "SecCompanyFacts",
     "SecCompanyFactsAdapter",
+    "SecCompanyFactsParseError",
+    "SecCompanyFactsParseReason",
     "SecNotFoundError",
     "SecProviderError",
     "SecRateLimitError",
@@ -59,6 +74,7 @@ __all__ = [
     "SecTickerRecord",
     "SecTimeoutError",
     "SecTransportError",
+    "parse_company_facts",
     "parse_sec_ticker_mapping",
     "preserve_sec_response",
     "validate_sec_response",
